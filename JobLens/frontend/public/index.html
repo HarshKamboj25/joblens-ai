@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>JobLens — AI Job Market Analytics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;-webkit-font-smoothing:antialiased}
+:root{--bg:#0d0e14;--bg2:#13141d;--bg3:#1a1b28;--card:#1e2030;--card2:#252840;--accent:#6c63ff;--accent2:#9d97ff;--accent-dim:rgba(108,99,255,0.15);--green:#06d6a0;--red:#ff6b6b;--yellow:#ffd166;--blue:#45b7d1;--teal:#4ecdc4;--text:#e8e9f0;--text2:#9699b0;--text3:#5a5d80;--text4:#3a3d5c;--border:#2a2d4a;--border2:#1e2138;--font:'DM Sans',sans-serif;--font-head:'Syne',sans-serif;--font-mono:'JetBrains Mono',monospace;--sidebar-w:230px;--ease:cubic-bezier(0.16,1,0.3,1)}
+[data-theme="light"]{--bg:#f4f5fa;--bg2:#eceef8;--bg3:#e4e6f5;--card:#fff;--card2:#f0f2fc;--border:#d4d6ee;--border2:#c8cae8;--text:#1a1b2e;--text2:#4a4d6e;--text3:#8a8dae;--text4:#b0b3ce;--accent-dim:rgba(108,99,255,.1)}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background .3s}
+.app{display:flex;min-height:100vh}
+.sidebar{width:var(--sidebar-w);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;position:sticky;top:0;overflow-y:auto;flex-shrink:0;z-index:100}
+.sb-logo{padding:26px 20px 20px;font-family:var(--font-head);font-size:21px;font-weight:800;color:#fff;letter-spacing:-.5px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);margin-bottom:10px}
+.sb-logo .dot{color:var(--accent)}.sb-logo .ver{margin-left:auto;font-family:var(--font-mono);font-size:10px;font-weight:400;background:var(--accent-dim);color:var(--accent2);padding:3px 7px;border-radius:20px}
+.nav-group{padding:6px 12px 2px}.nav-lbl{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text4);padding:0 8px;margin-bottom:3px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;cursor:pointer;font-size:13.5px;color:var(--text2);transition:all .2s;border:1px solid transparent;margin-bottom:2px;user-select:none}
+.nav-item:hover{color:var(--text);background:var(--bg3)}.nav-item.active{color:var(--accent2);background:var(--accent-dim);border-color:rgba(108,99,255,.2)}
+.nav-icon{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:7px;font-size:14px;background:var(--bg3);flex-shrink:0;transition:background .2s}
+.nav-item.active .nav-icon{background:rgba(108,99,255,.2)}
+.nav-badge{margin-left:auto;font-size:10px;background:rgba(255,107,107,.15);color:#ff8a8a;padding:2px 7px;border-radius:20px;font-weight:600}
+.sb-footer{margin-top:auto;padding:14px;border-top:1px solid var(--border)}
+.theme-btn{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:9px;background:var(--bg3);border:1px solid var(--border);cursor:pointer;font-size:12.5px;color:var(--text2);transition:all .2s;font-family:var(--font);width:100%;margin-bottom:8px}
+.theme-btn:hover{border-color:var(--accent);color:var(--text)}.sb-meta{font-size:11px;color:var(--text4);text-align:center}
+.main{flex:1;min-width:0;display:flex;flex-direction:column;max-height:100vh;overflow-y:auto}
+.pg-header{padding:26px 30px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--bg);position:sticky;top:0;z-index:50}
+.pg-header h1{font-family:var(--font-head);font-size:25px;font-weight:800;letter-spacing:-.5px;line-height:1.1}
+.pg-header h1 em{color:var(--accent);font-style:normal}.pg-sub{font-size:13px;color:var(--text2);margin-top:3px}
+.hdr-right{display:flex;gap:8px;align-items:center}
+.badge-live{background:rgba(6,214,160,.15);color:var(--green);border:1px solid rgba(6,214,160,.3);padding:5px 11px;border-radius:20px;font-size:11px;font-weight:500;display:flex;align-items:center;gap:5px}
+.badge-live::before{content:'';width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.btn-hdr{background:var(--card);border:1px solid var(--border);color:var(--text2);padding:7px 14px;border-radius:9px;cursor:pointer;font-size:13px;font-family:var(--font);transition:all .2s}
+.btn-hdr:hover{border-color:var(--accent);color:var(--accent2)}
+.pc{padding:22px 30px;display:flex;flex-direction:column;gap:20px}
+.sec-lbl{font-size:10.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.g64{display:grid;grid-template-columns:1.5fr 1fr;gap:14px}
+.g444{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.s2{grid-column:span 2}
+.card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:20px;transition:border-color .2s}
+.card:hover{border-color:var(--card2)}
+.card-title{font-size:14px;font-weight:500;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;color:var(--text)}
+.ct-sub{font-size:11px;color:var(--text3);font-weight:400}
+.mc{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:18px 20px;transition:all .2s var(--ease);cursor:default}
+.mc:hover{transform:translateY(-2px);border-color:var(--card2)}
+.mc-label{font-size:12px;color:var(--text2);margin-bottom:7px}
+.mc-val{font-family:var(--font-head);font-size:28px;font-weight:800;letter-spacing:-1px}
+.mc-delta{font-size:12px;margin-top:5px}
+.up{color:var(--green)}.dn{color:var(--red)}.neu{color:var(--text3)}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.bar-lbl{font-size:12px;color:var(--text2);width:110px;flex-shrink:0;text-align:right}
+.bar-track{flex:1;height:7px;background:var(--bg3);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;transition:width 1s var(--ease)}
+.bar-pct{font-size:11px;color:var(--text2);width:34px;text-align:right;flex-shrink:0}
+.sal-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.sal-lbl{font-size:12px;color:var(--text2);width:120px;flex-shrink:0}
+.sal-track{flex:1;height:21px;background:var(--bg3);border-radius:6px;overflow:hidden}
+.sal-fill{height:100%;border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;font-size:11px;font-weight:500;color:rgba(255,255,255,.9);transition:width 1s var(--ease)}
+.tag{display:inline-flex;align-items:center;padding:4px 10px;border-radius:20px;font-size:11.5px;font-weight:500;white-space:nowrap}
+.rcard{background:var(--bg3);border-radius:9px;padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s var(--ease);border:1px solid transparent;margin-bottom:5px}
+.rcard:hover{border-color:var(--accent);background:var(--accent-dim)}
+.ricon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.cloud{display:flex;flex-wrap:wrap;gap:7px}
+.stag{border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;transition:transform .15s;border:1px solid transparent}
+.stag:hover{transform:scale(1.06)}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead th{text-align:left;padding:8px 13px;color:var(--text3);font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap}
+tbody td{padding:11px 13px;border-bottom:1px solid var(--border2);color:var(--text2)}
+tbody td:first-child{color:var(--text);font-weight:500}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:rgba(255,255,255,.012)}
+.frow{display:flex;gap:7px;flex-wrap:wrap}
+.fbtn{background:var(--card);border:1px solid var(--border);color:var(--text2);padding:6px 15px;border-radius:20px;font-size:12px;cursor:pointer;font-family:var(--font);transition:all .2s}
+.fbtn:hover{border-color:var(--accent);color:var(--text)}
+.fbtn.active{background:var(--accent-dim);border-color:rgba(108,99,255,.4);color:var(--accent2)}
+.search-bar{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:8px 13px;transition:border-color .2s;max-width:220px}
+.search-bar:focus-within{border-color:var(--accent)}
+.search-bar input{background:none;border:none;flex:1;padding:0;color:var(--text);font-size:13px;font-family:var(--font);outline:none}
+.search-bar input::placeholder{color:var(--text3)}
+.gap-skill{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer}
+.ghave{background:rgba(6,214,160,.12);color:var(--green);border:1px solid rgba(6,214,160,.25)}
+.gneed{background:rgba(255,107,107,.12);color:#ff8a8a;border:1px solid rgba(255,107,107,.25)}
+.gskills{display:flex;flex-wrap:wrap;gap:7px}
+.insight-card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:20px;transition:all .2s var(--ease)}
+.insight-card:hover{border-color:var(--card2);transform:translateY(-2px)}
+.ihero{font-family:var(--font-head);font-size:42px;font-weight:800;color:var(--accent2);letter-spacing:-2px;line-height:1;margin:6px 0 10px}
+.ihero.sm{font-size:28px}
+.geo-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border2)}
+.geo-item:last-child{border-bottom:none}
+.geo-mini{width:75px;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.geo-fill{height:100%;border-radius:3px}
+select,input[type=text]{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:9px;font-family:var(--font);font-size:13px;outline:none;transition:border-color .2s;width:100%}
+select:focus,input:focus{border-color:var(--accent)}select{cursor:pointer}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.ani{animation:fadeUp .35s var(--ease) both}
+.d1{animation-delay:.04s}.d2{animation-delay:.08s}.d3{animation-delay:.12s}.d4{animation-delay:.16s}
+@media(max-width:1024px){.g4{grid-template-columns:repeat(2,1fr)}.g64{grid-template-columns:1fr}.g444{grid-template-columns:1fr 1fr}}
+@media(max-width:768px){.sidebar{display:none}.g4{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr}.pc{padding:14px}.pg-header{padding:14px}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar" id="sidebar">
+  <div class="sb-logo">Job<span class="dot">Lens</span><span class="ver">v2.0</span></div>
+  <div class="nav-group"><div class="nav-lbl">Overview</div>
+    <div class="nav-item active" data-page="dashboard"><div class="nav-icon">&#9638;</div>Dashboard</div>
+  </div>
+  <div class="nav-group"><div class="nav-lbl">Analytics</div>
+    <div class="nav-item" data-page="skills"><div class="nav-icon">&#9672;</div>Skills Analysis</div>
+    <div class="nav-item" data-page="roles"><div class="nav-icon">&#9678;</div>Job Roles</div>
+    <div class="nav-item" data-page="salary"><div class="nav-icon">$</div>Salary Trends</div>
+    <div class="nav-item" data-page="geo"><div class="nav-icon">&#8853;</div>Geography</div>
+  </div>
+  <div class="nav-group"><div class="nav-lbl">Tools</div>
+    <div class="nav-item" data-page="gap"><div class="nav-icon">&#9651;</div>Skill Gap<span class="nav-badge">NEW</span></div>
+    <div class="nav-item" data-page="insights"><div class="nav-icon">&#10022;</div>AI Insights</div>
+  </div>
+  <div class="sb-footer">
+    <button class="theme-btn" id="themeBtn">&#9728; Light mode</button>
+    <div class="sb-meta">12,847 jobs &middot; March 2025</div>
+  </div>
+</aside>
+<div class="main" id="main"></div>
+</div>
+<script>
+const SKILLS=[
+  {id:"python",name:"Python",cat:"lang",pct:87,mentions:11176,avgSalary:125000,growth:12,trend:[75,77,79,80,81,83,83,84,85,86,86,87]},
+  {id:"sql",name:"SQL",cat:"data",pct:79,mentions:10145,avgSalary:108000,growth:8,trend:[70,71,72,73,74,75,76,77,77,78,78,79]},
+  {id:"ml",name:"Machine Learning",cat:"ml",pct:68,mentions:8736,avgSalary:138000,growth:22,trend:[52,54,57,59,62,63,65,66,67,68,68,68]},
+  {id:"aws",name:"AWS",cat:"cloud",pct:61,mentions:7837,avgSalary:128000,growth:18,trend:[45,47,48,50,51,52,54,55,57,58,60,61]},
+  {id:"tensorflow",name:"TensorFlow",cat:"ml",pct:54,mentions:6937,avgSalary:142000,growth:15,trend:[42,43,45,47,48,50,51,52,53,54,54,54]},
+  {id:"react",name:"React",cat:"web",pct:52,mentions:6680,avgSalary:118000,growth:11,trend:[44,45,46,47,48,49,50,51,51,52,52,52]},
+  {id:"docker",name:"Docker",cat:"cloud",pct:49,mentions:6295,avgSalary:132000,growth:24,trend:[35,37,39,41,42,44,45,46,47,48,49,49]},
+  {id:"pandas",name:"Pandas",cat:"data",pct:47,mentions:6036,avgSalary:112000,growth:9,trend:[40,41,42,43,44,44,45,45,46,46,47,47]},
+  {id:"pytorch",name:"PyTorch",cat:"ml",pct:45,mentions:5781,avgSalary:148000,growth:31,trend:[28,30,32,34,36,38,40,41,43,44,45,45]},
+  {id:"kubernetes",name:"Kubernetes",cat:"cloud",pct:42,mentions:5396,avgSalary:145000,growth:28,trend:[25,27,29,31,33,35,37,38,40,41,42,42]},
+  {id:"spark",name:"Apache Spark",cat:"data",pct:38,mentions:4882,avgSalary:135000,growth:14,trend:[30,31,32,33,34,35,36,37,37,38,38,38]},
+  {id:"gcp",name:"GCP",cat:"cloud",pct:35,mentions:4496,avgSalary:130000,growth:20,trend:[25,26,27,28,29,30,31,32,33,34,35,35]},
+  {id:"langchain",name:"LangChain",cat:"ml",pct:32,mentions:4111,avgSalary:152000,growth:89,trend:[4,6,8,11,15,18,21,24,27,29,31,32]},
+  {id:"typescript",name:"TypeScript",cat:"web",pct:30,mentions:3854,avgSalary:122000,growth:19,trend:[20,21,22,23,24,25,26,27,28,29,30,30]},
+  {id:"azure",name:"Azure",cat:"cloud",pct:29,mentions:3726,avgSalary:126000,growth:16,trend:[22,22,23,24,25,25,26,27,28,28,29,29]},
+  {id:"dbt",name:"dbt",cat:"data",pct:27,mentions:3468,avgSalary:125000,growth:45,trend:[12,14,16,18,20,21,22,23,24,25,26,27]},
+  {id:"go",name:"Go",cat:"lang",pct:25,mentions:3212,avgSalary:135000,growth:17,trend:[18,19,20,21,22,22,23,23,24,24,25,25]},
+  {id:"fastapi",name:"FastAPI",cat:"web",pct:22,mentions:2826,avgSalary:118000,growth:38,trend:[8,9,11,13,15,17,18,19,20,21,22,22]},
+  {id:"vectordb",name:"Vector DB",cat:"ml",pct:18,mentions:2314,avgSalary:155000,growth:120,trend:[2,3,4,6,9,11,13,14,15,16,17,18]},
+  {id:"airflow",name:"Apache Airflow",cat:"data",pct:24,mentions:3085,avgSalary:128000,growth:21,trend:[16,17,18,19,20,21,22,22,23,23,24,24]},
+  {id:"kafka",name:"Apache Kafka",cat:"data",pct:20,mentions:2570,avgSalary:138000,growth:25,trend:[13,14,15,16,17,18,18,19,19,20,20,20]},
+  {id:"nodejs",name:"Node.js",cat:"web",pct:34,mentions:4368,avgSalary:115000,growth:8,trend:[28,29,30,31,31,32,32,33,33,34,34,34]},
+  {id:"rag",name:"RAG",cat:"ml",pct:14,mentions:1798,avgSalary:158000,growth:210,trend:[1,2,3,4,6,8,10,11,12,13,14,14]},
+];
+const ROLES=[
+  {id:"mle",role:"ML Engineer",icon:"&#x1F916;",color:"#6c63ff",count:2840,avgSalary:142000,entryS:95000,seniorS:195000,topSkills:["PyTorch","Python","TensorFlow","AWS","Docker"],exp:"3-5 yrs",growth:34,remote:52,desc:"Build, train and deploy machine learning models at scale.",companies:["Google","Meta","OpenAI","Anthropic","Nvidia"]},
+  {id:"ds",role:"Data Scientist",icon:"&#x1F4CA;",color:"#9d97ff",count:2540,avgSalary:128000,entryS:85000,seniorS:172000,topSkills:["Python","SQL","Pandas","Scikit-learn","Statistics"],exp:"2-4 yrs",growth:22,remote:48,desc:"Extract insights from complex datasets to guide business decisions.",companies:["Amazon","Netflix","Spotify","Airbnb","LinkedIn"]},
+  {id:"ai",role:"AI Engineer",icon:"&#x2736;",color:"#ff6b6b",count:1920,avgSalary:145000,entryS:98000,seniorS:200000,topSkills:["LangChain","Python","RAG","Vector DB","FastAPI"],exp:"2-5 yrs",growth:142,remote:58,desc:"Build production AI apps using LLMs and ML pipelines.",companies:["OpenAI","Anthropic","Cohere","Mistral","HuggingFace"]},
+  {id:"da",role:"Data Analyst",icon:"&#x1F4C8;",color:"#ffd166",count:2180,avgSalary:92000,entryS:62000,seniorS:130000,topSkills:["SQL","Excel","Tableau","Python","Power BI"],exp:"1-3 yrs",growth:18,remote:44,desc:"Translate data into actionable business insights via dashboards.",companies:["Deloitte","McKinsey","JPMorgan","Accenture","Salesforce"]},
+  {id:"de",role:"Data Engineer",icon:"&#x26A1;",color:"#06d6a0",count:1680,avgSalary:132000,entryS:88000,seniorS:178000,topSkills:["Apache Spark","Python","SQL","Kafka","Airflow"],exp:"3-5 yrs",growth:28,remote:50,desc:"Design and maintain data pipelines, warehouses, and infrastructure.",companies:["Snowflake","Databricks","Palantir","Stripe","Square"]},
+  {id:"fs",role:"Full Stack Dev",icon:"&#x25C8;",color:"#4ecdc4",count:1480,avgSalary:118000,entryS:78000,seniorS:165000,topSkills:["React","TypeScript","Node.js","SQL","Docker"],exp:"2-4 yrs",growth:15,remote:55,desc:"Build end-to-end web applications from database to user interface.",companies:["Shopify","Atlassian","GitHub","Vercel","Cloudflare"]},
+  {id:"mlops",role:"MLOps Engineer",icon:"&#x2699;",color:"#f7b731",count:820,avgSalary:138000,entryS:92000,seniorS:185000,topSkills:["Kubernetes","Docker","MLflow","Python","AWS"],exp:"3-6 yrs",growth:67,remote:46,desc:"Bridge ML models and production systems - CI/CD for machine learning.",companies:["Databricks","W&B","Neptune.ai","Azure ML","SageMaker"]},
+  {id:"devops",role:"DevOps / SRE",icon:"&#x2601;",color:"#45b7d1",count:1400,avgSalary:125000,entryS:82000,seniorS:172000,topSkills:["Kubernetes","Docker","AWS","Terraform","Python"],exp:"3-5 yrs",growth:12,remote:53,desc:"Ensure reliability, scalability and deployment velocity of cloud systems.",companies:["AWS","Google Cloud","Azure","HashiCorp","Datadog"]},
+];
+const GEO=[
+  {city:"San Francisco",country:"US",count:2840,pct:100,color:"#6c63ff",topRole:"AI Engineer",avgSalary:168000},
+  {city:"New York",country:"US",count:2140,pct:75,color:"#9d97ff",topRole:"Data Scientist",avgSalary:145000},
+  {city:"Seattle",country:"US",count:1680,pct:59,color:"#4ecdc4",topRole:"ML Engineer",avgSalary:152000},
+  {city:"Austin",country:"US",count:1240,pct:44,color:"#06d6a0",topRole:"Full Stack Dev",avgSalary:128000},
+  {city:"Bengaluru",country:"IN",count:1180,pct:42,color:"#ffd166",topRole:"Data Engineer",avgSalary:42000},
+  {city:"Remote",country:"-",count:980,pct:35,color:"#ff6b6b",topRole:"AI Engineer",avgSalary:138000},
+  {city:"Boston",country:"US",count:840,pct:30,color:"#f7b731",topRole:"ML Engineer",avgSalary:148000},
+  {city:"Hyderabad",country:"IN",count:780,pct:27,color:"#45b7d1",topRole:"Data Analyst",avgSalary:36000},
+  {city:"London",country:"UK",count:720,pct:25,color:"#a29bfe",topRole:"Data Scientist",avgSalary:95000},
+  {city:"Toronto",country:"CA",count:560,pct:20,color:"#fd79a8",topRole:"Full Stack Dev",avgSalary:105000},
+];
+const CATS={lang:{label:"Languages",color:"#6c63ff"},ml:{label:"AI/ML",color:"#ff6b6b"},cloud:{label:"Cloud",color:"#06d6a0"},data:{label:"Data",color:"#ffd166"},web:{label:"Web",color:"#45b7d1"}};
+const MONTHS=["Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar"];
+const BCOLORS=["#6c63ff","#9d97ff","#4ecdc4","#06d6a0","#ffd166","#ff6b6b","#f7b731","#45b7d1","#a29bfe","#74b9ff"];
+const GAP_REQ={mle:["Python","SQL","PyTorch","TensorFlow","Scikit-learn","AWS","Docker","Statistics","MLflow","Git"],ds:["Python","SQL","Pandas","Scikit-learn","Statistics","Machine Learning","R","A/B Testing","NLP","Matplotlib"],ai:["Python","LangChain","RAG","Vector DB","FastAPI","Docker","AWS","OpenAI API","Prompt Eng","MLOps"],da:["SQL","Excel","Power BI","Python","Tableau","Statistics","DAX","ETL","Data Storytelling","R"],de:["Python","SQL","Apache Spark","Airflow","Kafka","Docker","AWS","dbt","Hadoop","Scala"],fs:["React","TypeScript","Node.js","SQL","CSS","Git","REST APIs","Docker","Testing","AWS"],mlops:["Kubernetes","Docker","Python","MLflow","AWS","Terraform","CI/CD","Prometheus","Grafana","Ansible"],devops:["Kubernetes","Docker","AWS","Terraform","Python","CI/CD","Linux","Monitoring","Bash","Helm"]};
+const ALL_PICKER=["Python","SQL","Docker","React","Node.js","Git","CSS","TypeScript","AWS","TensorFlow","PyTorch","Pandas","Scikit-learn","Kubernetes","Apache Spark","Airflow","Kafka","Statistics","R","Machine Learning","NLP","LangChain","RAG","Vector DB","FastAPI","MLflow","Power BI","Tableau","Excel","dbt","Scala","Terraform","Linux","Bash","CI/CD","Prometheus","Helm","OpenAI API","Prompt Eng","MLOps","A/B Testing","Matplotlib","Hadoop"];
+let userSkills=JSON.parse(localStorage.getItem('jl-skills')||'["Python","SQL","Docker","React","Git","CSS"]');
+let theme=localStorage.getItem('jl-theme')||'dark';
+let activeCat='all',searchQ='',currentPage='dashboard';
+if(theme==='light')document.documentElement.setAttribute('data-theme','light');
+const charts={};
+function mkChart(id,cfg){if(charts[id]){charts[id].destroy();delete charts[id]}const c=document.getElementById(id);if(!c)return null;charts[id]=new Chart(c,cfg);return charts[id]}
+const GRID='#2a2d4a',TXT='#9699b0',TICK={size:11,family:"'DM Sans',sans-serif"};
+const bOpts=(h=false,yf)=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{[h?'y':'x']:{grid:{display:false},ticks:{color:TXT,font:TICK}},[h?'x':'y']:{grid:{color:GRID},ticks:{color:TXT,font:TICK,...(yf?{callback:yf}:{})}}}});
+const animBars=()=>requestAnimationFrame(()=>document.querySelectorAll('[data-target]').forEach(el=>el.style.width=el.dataset.target+'%'));
+const C=(t,s,b,x='')=>`<div class="card ${x}"><div class="card-title">${t}${s?`<span class="ct-sub">${s}</span>`:''}</div>${b}</div>`;
+const MC=(l,v,d,dc='up',col='var(--text)')=>`<div class="mc ani"><div class="mc-label">${l}</div><div class="mc-val" style="color:${col}">${v}</div>${d?`<div class="mc-delta ${dc}">${dc==='up'?'&#x2191;':dc==='dn'?'&#x2193;':'&#x2192;'} ${d}</div>`:''}</div>`;
+const SL=t=>`<div class="sec-lbl">${t}</div>`;
+const PH=(t,e,s)=>`<div class="pg-header"><div><h1>${t}${e?` <em>${e}</em>`:''}</h1>${s?`<div class="pg-sub">${s}</div>`:''}</div><div class="hdr-right"><div class="badge-live">Live Data</div><button class="btn-hdr" onclick="navigate(currentPage)">&#x21BB; Refresh</button></div></div>`;
+const CV=(id,h=300)=>`<div style="position:relative;height:${h}px"><canvas id="${id}"></canvas></div>`;
+const catBadge=cat=>`<span class="tag" style="background:${CATS[cat]?.color||'#999'}20;color:${CATS[cat]?.color||'#999'};font-size:11px;padding:2px 8px">${CATS[cat]?.label||cat}</span>`;
+const growBadge=g=>`<span class="tag" style="background:${g>=0?'rgba(6,214,160,.12)':'rgba(255,107,107,.12)'};color:${g>=0?'var(--green)':'var(--red)'};font-size:11px;padding:2px 8px">${g>=0?'+':''}${g}%</span>`;
+
+/* DASHBOARD */
+function pageDashboard(){
+  return`${PH('AI Job Market','Analytics','Analyzing 12,847 job listings &middot; Updated March 2025')}
+<div class="pc">
+${SL('Overview Metrics')}<div class="g4">
+${MC('Total Jobs Analyzed','12,847','18% vs last month','up','var(--text)')}
+${MC('Unique Skills Detected','284','23 new skills','up','var(--red)')}
+${MC('Avg Salary (Tech)','$118K','6.2% YoY','up','var(--yellow)')}
+${MC('Fastest Growing Role','AI Eng.','+142% YoY','up','var(--accent2)')}
+</div>
+<div class="g64">
+${C('Top In-Demand Skills','Frequency in listings',SKILLS.slice(0,10).map((s,i)=>`<div class="bar-row"><div class="bar-lbl">${s.name}</div><div class="bar-track"><div class="bar-fill" data-target="${s.pct}" style="background:${BCOLORS[i]};width:0%"></div></div><div class="bar-pct">${s.pct}%</div></div>`).join(''))}
+${C('Role Distribution','By category',`<div style="display:flex;flex-direction:column;align-items:center;gap:16px"><canvas id="donutChart" width="180" height="180"></canvas><div id="donut-legend" style="width:100%;display:flex;flex-direction:column;gap:8px"></div></div>`)}
+</div>
+<div class="g444">
+${C('Salary by Role','Annual avg',ROLES.slice(0,6).map((r,i)=>`<div class="sal-row"><div class="sal-lbl">${r.role}</div><div class="sal-track"><div class="sal-fill" data-target="${(r.avgSalary/160000*100).toFixed(1)}" style="background:${BCOLORS[i]};width:0%">$${Math.round(r.avgSalary/1000)}K</div></div></div>`).join(''))}
+${C('Trending Roles','YoY growth',ROLES.slice(0,6).map(r=>`<div class="rcard" data-pg="roles"><div class="ricon" style="background:${r.color}20;color:${r.color}">${r.icon}</div><div><div style="font-size:13px;font-weight:500;color:var(--text)">${r.role}</div><div style="font-size:11px;color:var(--text2)">${r.count.toLocaleString()} openings</div></div><div style="margin-left:auto;font-size:12px;font-weight:600;color:var(--green)">+${r.growth}%</div></div>`).join(''))}
+${C('Skills Cloud','Size = demand',`<div class="cloud">${SKILLS.slice(0,18).map((s,i)=>{const sz=[22,20,18,17,16,15,14,13,13,12,12,12,11,11,11,11,11,11][i]||11;const col=CATS[s.cat]?.color||'#999';return`<span class="stag" style="font-size:${sz}px;padding:${sz>15?'7px 13px':'4px 9px'};background:${col}20;color:${col};border-color:${col}40">${s.name}</span>`}).join('')}</div>`)}
+</div>
+${SL('Quick Access')}<div class="g4">
+${[{p:'skills',l:'Skills Analysis',s:'24 skills ranked',i:'&#9672;',c:'#6c63ff'},{p:'roles',l:'Job Roles',s:'8 role profiles',i:'&#9678;',c:'#ff6b6b'},{p:'salary',l:'Salary Trends',s:'Role &amp; skill premiums',i:'$',c:'#06d6a0'},{p:'gap',l:'Skill Gap Check',s:'Find missing skills',i:'&#9651;',c:'#ffd166'}].map(x=>`<div class="card ani" style="cursor:pointer;border-color:${x.c}30" data-pg="${x.p}"><div style="font-size:22px;margin-bottom:9px">${x.i}</div><div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px">${x.l}</div><div style="font-size:12px;color:var(--text3)">${x.s}</div></div>`).join('')}
+</div>
+</div>`;
+}
+function afterDashboard(){
+  animBars();
+  const cv={};SKILLS.forEach(s=>{cv[s.cat]=(cv[s.cat]||0)+s.mentions});
+  const cl=Object.keys(CATS),cc=cl.map(k=>CATS[k].color),cv2=cl.map(k=>cv[k]||0),tot=cv2.reduce((a,b)=>a+b,0);
+  mkChart('donutChart',{type:'doughnut',data:{labels:cl.map(k=>CATS[k].label),datasets:[{data:cv2,backgroundColor:cc,borderWidth:0,hoverOffset:5}]},options:{responsive:false,cutout:'68%',plugins:{legend:{display:false}}}});
+  document.getElementById('donut-legend').innerHTML=cl.map((k,i)=>`<div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text2)"><div style="width:9px;height:9px;border-radius:2px;background:${cc[i]}"></div><span>${CATS[k].label}</span><span style="margin-left:auto;font-weight:500;color:var(--text)">${Math.round(cv2[i]/tot*100)}%</span></div>`).join('');
+}
+
+/* SKILLS */
+function pageSkills(){
+  const cats=[{id:'all',l:'All Skills'},...Object.entries(CATS).map(([id,c])=>({id,l:c.label}))];
+  return`${PH('Skills','Analysis','24 skills tracked across 12,847 job listings')}
+<div class="pc">
+<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+<div class="frow" id="cat-filter-row">${cats.map(f=>`<div class="fbtn ${f.id==='all'?'active':''}" data-cat="${f.id}">${f.l}</div>`).join('')}</div>
+<div class="search-bar"><span style="color:var(--text3);font-size:13px">&#128269;</span><input type="text" placeholder="Search skills..." id="skill-search"/></div>
+</div>
+<div class="g64">${C('Skill Demand','Filtered',CV('skillsBarChart',400))}${C('12-Month Trend','Top skills rolling',CV('trendChart',400))}</div>
+${C('Skills Directory','',`<div class="tw"><table><thead><tr><th>Skill</th><th>Category</th><th>Mentions</th><th>Demand %</th><th>Avg Salary</th><th>Growth YoY</th></tr></thead><tbody id="skills-tbody"></tbody></table></div>`)}
+</div>`;
+}
+function renderSkillTable(skills){const el=document.getElementById('skills-tbody');if(!el)return;el.innerHTML=skills.map(s=>`<tr><td>${s.name}</td><td>${catBadge(s.cat)}</td><td style="font-family:var(--font-mono)">${s.mentions.toLocaleString()}</td><td><div style="display:flex;align-items:center;gap:7px"><div style="flex:1;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;min-width:50px"><div style="width:${s.pct}%;height:100%;background:${CATS[s.cat]?.color||'#999'};border-radius:2px"></div></div><span style="font-size:11px;color:var(--text2)">${s.pct}%</span></div></td><td style="color:var(--green)">$${Math.round(s.avgSalary/1000)}K</td><td>${growBadge(s.growth)}</td></tr>`).join('');}
+function renderSkillCharts(skills){
+  const sl=skills.slice(0,16);
+  mkChart('skillsBarChart',{type:'bar',data:{labels:sl.map(s=>s.name),datasets:[{data:sl.map(s=>s.pct),backgroundColor:sl.map(s=>(CATS[s.cat]?.color||'#999')+'cc'),borderRadius:5,borderSkipped:false}]},options:{...bOpts(true,v=>v+'%'),indexAxis:'y',plugins:{legend:{display:false}}}});
+  const top4=SKILLS.slice(0,4);const tc=['#6c63ff','#ff6b6b','#06d6a0','#ffd166'];
+  mkChart('trendChart',{type:'line',data:{labels:MONTHS,datasets:top4.map((s,i)=>({label:s.name,data:s.trend,borderColor:tc[i],tension:.4,fill:false,pointRadius:3,borderWidth:2}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:TXT,font:TICK,boxWidth:10,padding:12}}},scales:{x:{grid:{color:GRID},ticks:{color:TXT,font:TICK}},y:{grid:{color:GRID},ticks:{color:TXT,font:TICK}}}}});
+}
+function afterSkills(){let f=[...SKILLS];renderSkillTable(f);renderSkillCharts(f);document.getElementById('cat-filter-row').addEventListener('click',e=>{const b=e.target.closest('[data-cat]');if(!b)return;activeCat=b.dataset.cat;document.querySelectorAll('[data-cat]').forEach(x=>x.classList.toggle('active',x.dataset.cat===activeCat));f=SKILLS.filter(s=>activeCat==='all'||s.cat===activeCat).filter(s=>!searchQ||s.name.toLowerCase().includes(searchQ));renderSkillTable(f);renderSkillCharts(f);});document.getElementById('skill-search').addEventListener('input',e=>{searchQ=e.target.value.toLowerCase();renderSkillTable(SKILLS.filter(s=>activeCat==='all'||s.cat===activeCat).filter(s=>!searchQ||s.name.toLowerCase().includes(searchQ)));});}
+
+/* ROLES */
+function pageRoles(){
+  return`${PH('Job','Roles','8 role categories across 12,847 listings')}
+<div class="pc">
+<div class="g4">${ROLES.map(r=>`<div class="mc ani" style="border-left:3px solid ${r.color}"><div class="mc-label">${r.icon} ${r.role}</div><div class="mc-val" style="color:${r.color};font-size:24px">${r.count.toLocaleString()}</div><div class="mc-delta up">+${r.growth}% YoY</div></div>`).join('')}</div>
+<div class="g64">${C('Jobs by Role','Total listings',CV('rolesBarChart',320))}${C('YoY Growth by Role',null,CV('growthBarChart',320))}</div>
+${C('Role Details','',`<div class="tw"><table><thead><tr><th>Role</th><th>Openings</th><th>Avg Salary</th><th>Top Skills</th><th>Experience</th><th>Remote %</th><th>Growth</th></tr></thead><tbody>${ROLES.map(r=>`<tr><td>${r.icon} ${r.role}</td><td>${r.count.toLocaleString()}</td><td style="color:var(--green)">$${Math.round(r.avgSalary/1000)}K</td><td>${r.topSkills.slice(0,3).map(s=>`<span class="tag" style="background:${r.color}15;color:${r.color};font-size:10px;padding:2px 7px;margin-right:3px">${s}</span>`).join('')}</td><td>${r.exp}</td><td>${r.remote}%</td><td>${growBadge(r.growth)}</td></tr>`).join('')}</tbody></table></div>`)}
+${SL('Role Profiles')}<div class="g3">${ROLES.map(r=>`<div class="card ani" style="border-top:3px solid ${r.color}"><div style="display:flex;align-items:center;gap:10px;margin-bottom:11px"><div style="width:38px;height:38px;border-radius:9px;background:${r.color}20;display:flex;align-items:center;justify-content:center;font-size:19px">${r.icon}</div><div><div style="font-weight:500;color:var(--text)">${r.role}</div><div style="font-size:11px;color:var(--text3)">${r.exp} exp</div></div></div><div style="font-size:12.5px;color:var(--text2);line-height:1.6;margin-bottom:11px">${r.desc}</div><div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:11px">${r.topSkills.map(s=>`<span class="tag" style="background:${r.color}15;color:${r.color};font-size:11px;padding:3px 8px">${s}</span>`).join('')}</div><div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--text3);border-top:1px solid var(--border2);padding-top:9px"><span>$${Math.round(r.entryS/1000)}K&#x2013;$${Math.round(r.seniorS/1000)}K</span><span>${r.remote}% remote</span><span style="color:var(--green)">+${r.growth}%</span></div></div>`).join('')}</div>
+</div>`;}
+function afterRoles(){mkChart('rolesBarChart',{type:'bar',data:{labels:ROLES.map(r=>r.role),datasets:[{data:ROLES.map(r=>r.count),backgroundColor:ROLES.map(r=>r.color+'cc'),borderRadius:6,borderSkipped:false}]},options:{...bOpts(),plugins:{legend:{display:false}}}});mkChart('growthBarChart',{type:'bar',data:{labels:ROLES.map(r=>r.role),datasets:[{data:ROLES.map(r=>r.growth),backgroundColor:ROLES.map(r=>r.growth>50?'#ff6b6bcc':r.growth>20?'#ffd166cc':'#06d6a0cc'),borderRadius:6,borderSkipped:false}]},options:{...bOpts(true,v=>v+'%'),indexAxis:'y',plugins:{legend:{display:false}}}});}
+
+/* SALARY */
+function pageSalary(){
+  return`${PH('Salary','Trends','Compensation intelligence across roles and skills')}
+<div class="pc">
+<div class="g4">
+${MC('Highest Avg Role','AI Engineer','$145K average','neu','var(--accent2)')}
+${MC('Best Skill Premium','RAG','+$63K lift','up','var(--green)')}
+${MC('Fastest Pay Growth','AI Eng.','+21% YoY','up','var(--yellow)')}
+${MC('Entry Level Avg','$78K','+9% YoY','up','var(--text)')}
+</div>
+<div class="g64">${C('Salary by Role (Entry / Mid / Senior)',null,CV('salaryLevelChart',340))}${C('Skill Salary Premium','vs baseline $95K',CV('skillPremiumChart',340))}</div>
+${C('Salary History 2021-2025','All roles',CV('salaryHistoryChart',300))}
+${SL('Role Salary Breakdown')}<div class="g3">${ROLES.map(r=>`<div class="card ani"><div style="display:flex;align-items:center;gap:9px;margin-bottom:13px"><span style="font-size:20px">${r.icon}</span><div><div style="font-weight:500;color:var(--text)">${r.role}</div><div style="font-size:11px;color:var(--text3)">Avg $${Math.round(r.avgSalary/1000)}K</div></div></div>${[['Entry',r.entryS],['Mid (Avg)',r.avgSalary],['Senior',r.seniorS]].map(([l,v])=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="font-size:11px;color:var(--text3);width:65px">${l}</div><div style="flex:1;height:5px;background:var(--bg3);border-radius:2px;overflow:hidden"><div style="width:${Math.round(v/220000*100)}%;height:100%;background:${r.color};border-radius:2px"></div></div><div style="font-size:11px;color:var(--text2);width:42px;text-align:right">$${Math.round(v/1000)}K</div></div>`).join('')}</div>`).join('')}</div>
+</div>`;}
+function afterSalary(){
+  const sh={mle:[108,118,128,136,142],ds:[102,110,116,122,128],ai:[105,115,128,138,145],da:[75,80,84,88,92],de:[108,115,122,128,132],fs:[98,104,109,114,118],mlops:[102,112,122,132,138],devops:[105,110,115,120,125]};
+  mkChart('salaryLevelChart',{type:'bar',data:{labels:ROLES.map(r=>r.role),datasets:[{label:'Entry($K)',data:ROLES.map(r=>Math.round(r.entryS/1000)),backgroundColor:'#6c63ff55',borderRadius:4,borderSkipped:false},{label:'Mid($K)',data:ROLES.map(r=>Math.round(r.avgSalary/1000)),backgroundColor:'#6c63ffaa',borderRadius:4,borderSkipped:false},{label:'Senior($K)',data:ROLES.map(r=>Math.round(r.seniorS/1000)),backgroundColor:'#9d97ff',borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:TXT,font:TICK,boxWidth:10,padding:10}}},scales:{x:{grid:{display:false},ticks:{color:TXT,font:{size:10,family:"'DM Sans',sans-serif"}}},y:{grid:{color:GRID},ticks:{color:TXT,font:TICK,callback:v=>'$'+v+'K'}}}}});
+  const ts=[...SKILLS].sort((a,b)=>b.avgSalary-a.avgSalary).slice(0,10);const pr=ts.map(s=>Math.round((s.avgSalary-95000)/1000));
+  mkChart('skillPremiumChart',{type:'bar',data:{labels:ts.map(s=>s.name),datasets:[{label:'Premium($K)',data:pr,backgroundColor:pr.map(p=>p>50?'#ff6b6b99':p>30?'#ffd16699':'#06d6a099'),borderRadius:5,borderSkipped:false}]},options:{...bOpts(false,v=>'+$'+v+'K'),plugins:{legend:{display:false}}}});
+  mkChart('salaryHistoryChart',{type:'line',data:{labels:['2021','2022','2023','2024','2025'],datasets:ROLES.map(r=>({label:r.role,data:sh[r.id],borderColor:r.color,fill:false,tension:.4,pointRadius:3,borderWidth:2}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:TXT,font:TICK,boxWidth:10,padding:10}}},scales:{x:{grid:{color:GRID},ticks:{color:TXT,font:TICK}},y:{grid:{color:GRID},ticks:{color:TXT,font:TICK,callback:v=>'$'+v+'K'}}}}});
+}
+
+/* GEOGRAPHY */
+function pageGeo(){
+  return`${PH('Geographic','Trends','Hiring hotspots for tech roles worldwide')}
+<div class="pc">
+<div class="g4">${GEO.slice(0,4).map(g=>`<div class="mc ani"><div class="mc-label">&#x1F4CD; ${g.city} &middot; ${g.country}</div><div class="mc-val" style="color:${g.color};font-size:24px">${g.count.toLocaleString()}</div><div class="mc-delta neu">${g.topRole}</div></div>`).join('')}</div>
+${C('Top Hiring Cities','Job count',CV('geoBarChart',280),'s2')}
+<div class="g64">
+${C('City Breakdown','',GEO.map(g=>`<div class="geo-item"><div style="font-size:13px;color:var(--text);flex:1">${g.city}</div><div style="font-size:11px;color:var(--text3);margin-right:6px">${g.country}</div><div class="geo-mini"><div class="geo-fill" style="width:${g.pct}%;background:${g.color}"></div></div><div style="font-size:12px;width:50px;text-align:right;color:${g.color};font-weight:500">${g.count.toLocaleString()}</div></div>`).join(''))}
+${C('City Details','',`<div class="tw"><table><thead><tr><th>City</th><th>Country</th><th>Jobs</th><th>Top Role</th><th>Avg Salary</th></tr></thead><tbody>${GEO.map(g=>`<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${g.color};margin-right:7px"></span>${g.city}</td><td>${g.country}</td><td>${g.count.toLocaleString()}</td><td style="color:${g.color}">${g.topRole}</td><td style="color:var(--green)">$${Math.round(g.avgSalary/1000)}K</td></tr>`).join('')}</tbody></table></div>`)}
+</div>
+</div>`;}
+function afterGeo(){mkChart('geoBarChart',{type:'bar',data:{labels:GEO.map(g=>g.city),datasets:[{data:GEO.map(g=>g.count),backgroundColor:GEO.map(g=>g.color+'cc'),borderRadius:7,borderSkipped:false}]},options:{...bOpts(),plugins:{legend:{display:false}}}});}
+
+/* SKILL GAP */
+function computeGap(rid){const req=GAP_REQ[rid]||[];const hv=req.filter(s=>userSkills.includes(s));const nd=req.filter(s=>!userSkills.includes(s));return{hv,nd,pct:Math.round(hv.length/req.length*100),req};}
+const RADAR_D=['AI/ML','Cloud','Data','Web Dev','DevOps','Statistics'];
+const ROLE_R={mle:[90,65,75,20,55,80],ds:[80,40,90,25,35,95],ai:[95,70,50,35,60,65],da:[45,35,85,35,30,75],de:[50,80,90,25,70,40],fs:[15,45,40,90,50,20],mlops:[60,85,50,25,90,40],devops:[25,90,35,20,95,20]};
+const USER_R=[20,30,15,45,30,10];
+function pageSkillGap(){
+  return`${PH('Skill Gap','Analyzer','Compare your profile against any target role')}
+<div class="pc">
+<div class="g64">
+<div style="display:flex;flex-direction:column;gap:14px">
+${C('Your Current Skills','Click x to remove',`<div class="gskills" id="my-skills" style="margin-bottom:14px"></div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:7px">Add a skill</div><div class="gskills" id="skill-picker" style="max-height:120px;overflow-y:auto"></div>`)}
+${C('Gap Analysis','',`<select id="role-select" style="margin-bottom:14px">${Object.entries(GAP_REQ).map(([id])=>{const r=ROLES.find(x=>x.id===id)||{role:id};return`<option value="${id}">${r.role}</option>`}).join('')}</select><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Skills You Have</div><div class="gskills" id="have-skills" style="margin-bottom:13px"></div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Skills to Learn</div><div class="gskills" id="need-skills" style="margin-bottom:14px"></div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:7px">Match Score</div><div style="display:flex;align-items:center;gap:12px"><div style="flex:1;height:7px;background:var(--bg3);border-radius:4px;overflow:hidden"><div id="match-bar" style="height:100%;background:linear-gradient(90deg,var(--accent),var(--green));border-radius:4px;transition:width .8s var(--ease);width:0%"></div></div><div id="match-pct" style="font-family:var(--font-head);font-weight:800;font-size:25px;min-width:58px;text-align:right">0%</div></div>`)}
+</div>
+${C('Skill Radar','Your profile vs role',CV('gapRadarChart',340))}
+</div>
+${SL('All Role Match Cards')}<div class="g4" id="gap-role-cards"></div>
+</div>`;}
+function updateGapDisplay(rid){
+  const{hv,nd,pct}=computeGap(rid);
+  const h=document.getElementById('have-skills'),n=document.getElementById('need-skills'),b=document.getElementById('match-bar'),p=document.getElementById('match-pct');
+  if(h)h.innerHTML=hv.map(s=>`<span class="gap-skill ghave">${s}</span>`).join('')||'<span style="font-size:11.5px;color:var(--text3)">None matched yet</span>';
+  if(n)n.innerHTML=nd.map(s=>`<span class="gap-skill gneed">${s}</span>`).join('');
+  if(b)b.style.width=pct+'%';
+  if(p){p.textContent=pct+'%';p.style.color=pct>=70?'var(--green)':pct>=40?'var(--yellow)':'var(--red)';}
+  const role=ROLES.find(r=>r.id===rid)||{};
+  mkChart('gapRadarChart',{type:'radar',data:{labels:RADAR_D,datasets:[{label:'Your Profile',data:USER_R,borderColor:'#06d6a0',backgroundColor:'rgba(6,214,160,.12)',pointBackgroundColor:'#06d6a0',borderWidth:2},{label:role.role||rid,data:ROLE_R[rid]||[],borderColor:'#6c63ff',backgroundColor:'rgba(108,99,255,.1)',pointBackgroundColor:'#6c63ff',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:TXT,font:TICK,boxWidth:10,padding:10}}},scales:{r:{grid:{color:GRID},ticks:{display:false,backdropColor:'transparent'},pointLabels:{color:TXT,font:TICK},angleLines:{color:GRID}}}}});
+  renderRoleMatchCards();
+}
+function renderMySkills(){const el=document.getElementById('my-skills');if(!el)return;el.innerHTML=userSkills.map(s=>`<span class="gap-skill ghave" data-remove="${s}" style="cursor:pointer">${s} <span style="opacity:.6">x</span></span>`).join('');}
+function renderSkillPicker(){const el=document.getElementById('skill-picker');if(!el)return;el.innerHTML=ALL_PICKER.filter(s=>!userSkills.includes(s)).map(s=>`<span class="tag" style="background:var(--bg3);color:var(--text2);border:1px solid var(--border);font-size:11.5px;padding:4px 9px;cursor:pointer" data-add="${s}">${s}</span>`).join('');}
+function renderRoleMatchCards(){const el=document.getElementById('gap-role-cards');if(!el)return;el.innerHTML=Object.entries(GAP_REQ).map(([id])=>{const{pct}=computeGap(id);const role=ROLES.find(r=>r.id===id)||{role:id};const col=pct>=70?'var(--green)':pct>=40?'var(--yellow)':'var(--red)';const left=GAP_REQ[id].length-Math.round(pct/100*GAP_REQ[id].length);return`<div class="card ani" style="cursor:pointer" onclick="document.getElementById('role-select').value='${id}';updateGapDisplay('${id}')"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:12.5px;font-weight:500;color:var(--text)">${role.role}</span><span style="font-family:var(--font-head);font-weight:800;font-size:18px;color:${col}">${pct}%</span></div><div style="height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;margin-bottom:8px"><div style="width:${pct}%;height:100%;background:${col};border-radius:2px"></div></div><div style="font-size:11.5px;color:var(--text3)">${left} skill${left!==1?'s':''} to learn</div></div>`;}).join('');}
+function afterSkillGap(){
+  renderMySkills();renderSkillPicker();updateGapDisplay('mle');
+  document.getElementById('role-select').addEventListener('change',e=>updateGapDisplay(e.target.value));
+  document.getElementById('my-skills').addEventListener('click',e=>{const s=e.target.closest('[data-remove]')?.dataset.remove;if(!s)return;userSkills=userSkills.filter(x=>x!==s);localStorage.setItem('jl-skills',JSON.stringify(userSkills));renderMySkills();renderSkillPicker();updateGapDisplay(document.getElementById('role-select').value);});
+  document.getElementById('skill-picker').addEventListener('click',e=>{const s=e.target.closest('[data-add]')?.dataset.add;if(!s)return;userSkills=[...userSkills,s];localStorage.setItem('jl-skills',JSON.stringify(userSkills));renderMySkills();renderSkillPicker();updateGapDisplay(document.getElementById('role-select').value);});
+}
+
+/* INSIGHTS */
+const INSIGHTS_DATA=[
+  {emoji:"&#x1F525;",title:"Hottest Emerging Skill: 2025",hero:"RAG",body:"Retrieval-Augmented Generation now appears in 34% of AI Engineer postings, up from just 6% in 2023. Companies are hiring engineers who can build production-grade LLM pipelines.",tags:[{l:"AI/ML",c:"#6c63ff"},{l:"467% YoY",c:"#06d6a0"}]},
+  {emoji:"&#x1F4A1;",title:"Career Path Spotlight",hero:"Data to AI",sm:true,body:"Data Analysts transitioning to AI roles see an average 48% salary increase. Bridge skills: LangChain, vector DBs, and prompt engineering.",tags:[{l:"Career Path",c:"#ffd166"},{l:"+48% salary",c:"#06d6a0"}]},
+  {emoji:"&#x1F4C8;",title:"Role Explosion: AI Engineer",hero:"+142%",body:"AI Engineer represents 8.4% of all tech postings in 2025, barely existing in 2022. Companies want ML + software hybrid engineers.",tags:[{l:"142% YoY",c:"#ff6b6b"},{l:"8.4% of market",c:"#9d97ff"}]},
+  {emoji:"&#x1F30F;",title:"Remote vs On-site Shift",hero:"38%",body:"Remote roles stabilized at 38% for tech in 2025. Hybrid (3 days office) is now dominant at 44%. Fully on-site growing for AI research roles.",tags:[{l:"Market Trend",c:"#6c63ff"},{l:"44% hybrid",c:"#45b7d1"}]},
+  {emoji:"&#x26A1;",title:"Skill Depreciation Alert",hero:"Pivot Now",sm:true,body:"MATLAB, SAS, and standalone Tableau are declining. Companies want Python-native analytics with Polars, DuckDB, or dbt.",tags:[{l:"Declining",c:"#ff6b6b"},{l:"Mid-career risk",c:"#ffd166"}]},
+  {emoji:"&#x1F4B0;",title:"Highest ROI Learning Path",hero:"+$31K",body:"For a Python developer, adding Kubernetes and AWS certifications yields the highest salary ROI - an average $31K annual increase.",tags:[{l:"+$31K avg lift",c:"#06d6a0"},{l:"Cloud",c:"#4ecdc4"}]},
+];
+function pageInsights(){
+  return`${PH('AI','Insights','Intelligent analysis of job market signals and emerging trends')}
+<div class="pc">
+${SL('Market Intelligence')}<div class="g3">${INSIGHTS_DATA.map((ins,i)=>`<div class="insight-card ani d${(i%4)+1}"><div style="font-size:13px;font-weight:500;color:var(--text2);margin-bottom:5px">${ins.emoji} ${ins.title}</div><div class="ihero ${ins.sm?'sm':''}">${ins.hero}</div><div style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:11px">${ins.body}</div><div style="display:flex;flex-wrap:wrap;gap:6px">${ins.tags.map(t=>`<span class="tag" style="background:${t.c}18;color:${t.c};border:1px solid ${t.c}30">${t.l}</span>`).join('')}</div></div>`).join('')}</div>
+${C('Technology Adoption Forecast','Actuals + 6-month projection',CV('forecastChart',260))}
+${SL('Key Takeaways')}<div class="g3">${[{icon:'&#x1F393;',title:'For Students',pts:['Start with Python + SQL (80%+ of postings)','Add one cloud provider (AWS most demanded)','Build 2-3 real projects with real data','Learn Git/Docker early - baseline expectations']},{icon:'&#x1F504;',title:'For Career Switchers',pts:['Data Analyst to AI Engineer is the hottest path','LangChain + RAG bridge the gap','Expect 6-12 months of dedicated learning','Portfolio with LLM-powered apps stands out']},{icon:'&#x1F4C8;',title:'For Mid-Career Pros',pts:['Kubernetes + AWS adds $28K+ salary premium','MLOps is undersupplied - strong opportunity','Avoid over-investing in declining tools (SAS/MATLAB)','AWS SAA or GCP Pro certifications pay off']}].map(s=>`<div class="card ani"><div style="font-size:21px;margin-bottom:8px">${s.icon}</div><div style="font-weight:500;color:var(--text);margin-bottom:11px">${s.title}</div><ul style="list-style:none;display:flex;flex-direction:column;gap:8px">${s.pts.map(p=>`<li style="display:flex;gap:8px;font-size:12.5px;color:var(--text2);line-height:1.5"><span style="color:var(--accent);flex-shrink:0">&#x2192;</span>${p}</li>`).join('')}</ul></div>`).join('')}
+</div>
+</div>`;}
+function afterInsights(){
+  const lb=["Q1 24","Q2 24","Q3 24","Q4 24","Q1 25","Q2 25","Q3 25","Q4 25"];
+  const sr=[{n:"LLM Tools",c:"#ff6b6b",d:[8,14,20,28,32,38,45,52],a:4},{n:"Cloud Native",c:"#06d6a0",d:[42,44,47,50,55,58,61,65],a:4},{n:"Vector DB",c:"#ffd166",d:[2,4,8,14,18,25,33,42],a:4},{n:"Traditional BI",c:"#9699b0",d:[68,65,61,57,53,50,47,44],a:4}];
+  const ds=[];
+  sr.forEach(s=>{ds.push({label:s.n,data:s.d.slice(0,s.a+1).concat(Array(lb.length-s.a-1).fill(null)),borderColor:s.c,fill:false,tension:.4,pointRadius:3,borderWidth:2});ds.push({label:s.n+' (forecast)',data:Array(s.a).fill(null).concat(s.d.slice(s.a)),borderColor:s.c,borderDash:[6,4],fill:false,tension:.4,pointRadius:3,borderWidth:2});});
+  mkChart('forecastChart',{type:'line',data:{labels:lb,datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:TXT,font:TICK,boxWidth:10,padding:10,filter:i=>!i.text.includes('forecast')}}},scales:{x:{grid:{color:GRID},ticks:{color:TXT,font:TICK}},y:{grid:{color:GRID},ticks:{color:TXT,font:TICK,callback:v=>v+'%'}}}}});
+}
+
+/* ROUTER */
+const PAGES={dashboard:{r:pageDashboard,a:afterDashboard},skills:{r:pageSkills,a:afterSkills},roles:{r:pageRoles,a:afterRoles},salary:{r:pageSalary,a:afterSalary},geo:{r:pageGeo,a:afterGeo},gap:{r:pageSkillGap,a:afterSkillGap},insights:{r:pageInsights,a:afterInsights}};
+function navigate(pageId){
+  if(!PAGES[pageId])return;currentPage=pageId;
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active',el.dataset.page===pageId));
+  const main=document.getElementById('main');main.innerHTML=PAGES[pageId].r();
+  requestAnimationFrame(()=>PAGES[pageId].a());
+  main.addEventListener('click',e=>{const pg=e.target.closest('[data-pg]')?.dataset.pg;if(pg&&PAGES[pg])navigate(pg);});
+}
+document.getElementById('sidebar').addEventListener('click',e=>{
+  const pg=e.target.closest('[data-page]')?.dataset.page;if(pg)navigate(pg);
+  if(e.target.closest('#themeBtn')){theme=theme==='dark'?'light':'dark';localStorage.setItem('jl-theme',theme);document.documentElement.setAttribute('data-theme',theme==='light'?'light':'dark');document.getElementById('themeBtn').innerHTML=theme==='dark'?'&#9728; Light mode':'&#9790; Dark mode';}
+});
+navigate('dashboard');
+</script>
+</body>
+</html>

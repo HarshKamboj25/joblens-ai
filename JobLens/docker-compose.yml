@@ -1,0 +1,49 @@
+version: "3.9"
+
+services:
+  # ── Frontend (Nginx serving static build) ────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: joblens-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - joblens-net
+
+  # ── FastAPI Backend ───────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: joblens-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - ENV=production
+    volumes:
+      - ./backend:/app
+    networks:
+      - joblens-net
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  # ── Streamlit Dashboard (optional Python UI) ─────────────
+  streamlit:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: joblens-streamlit
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./backend:/app
+    networks:
+      - joblens-net
+    command: streamlit run streamlit_app.py --server.port=8501 --server.address=0.0.0.0
+
+networks:
+  joblens-net:
+    driver: bridge
